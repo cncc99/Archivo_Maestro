@@ -5,9 +5,9 @@ import os
 import shutil
 import logging
 from pathlib import Path
-import mimetypes  # Reemplazo para detección de tipo MIME
+import mimetypes
 import threading
-import time
+import re
 from datetime import datetime
 
 # Configuración de logging
@@ -23,8 +23,8 @@ mimetypes.init()
 class FileOrganizerApp(TkinterDnD.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Organizador Avanzado de Archivos")
-        self.geometry("800x700")
+        self.title("Organizador Avanzado de Archivos Universitarios")
+        self.geometry("900x750")
         self.configure(bg="#f0f0f0")
         
         # Variables
@@ -33,6 +33,122 @@ class FileOrganizerApp(TkinterDnD.Tk):
         self.dry_run = BooleanVar(value=False)
         self.progress = StringVar(value="Listo")
         self.running = False
+        self.organize_by_course = BooleanVar(value=True)
+        self.organize_by_type = BooleanVar(value=True)
+        
+        # Diccionario de abreviaturas de cursos universitarios
+        self.course_abbreviations = {
+            # Patrones comunes para nombres de cursos
+            'BD': 'Base de Datos',
+            'BASEDATOS': 'Base de Datos',
+            'DB': 'Base de Datos',
+            'DATABASE': 'Base de Datos',
+            'PROG': 'Programación',
+            'PROGRAMACION': 'Programación',
+            'ALG': 'Algoritmos',
+            'ALGORITMOS': 'Algoritmos',
+            'CALC': 'Cálculo',
+            'CALCULO': 'Cálculo',
+            'FIS': 'Física',
+            'FISICA': 'Física',
+            'QUIM': 'Química',
+            'QUIMICA': 'Química',
+            'REDES': 'Redes de Computadoras',
+            'REDESCOMP': 'Redes de Computadoras',
+            'SO': 'Sistemas Operativos',
+            'SISTOP': 'Sistemas Operativos',
+            'IA': 'Inteligencia Artificial',
+            'INTELART': 'Inteligencia Artificial',
+            'ML': 'Machine Learning',
+            'MACHINELEARN': 'Machine Learning',
+            'WEB': 'Desarrollo Web',
+            'DESWEB': 'Desarrollo Web',
+            'MOVIL': 'Desarrollo Móvil',
+            'DESMOVIL': 'Desarrollo Móvil',
+            'SEG': 'Seguridad Informática',
+            'SEGINFO': 'Seguridad Informática',
+            'INGSOFT': 'Ingeniería de Software',
+            'IS': 'Ingeniería de Software',
+            'ARQCOMP': 'Arquitectura de Computadoras',
+            'ARQ': 'Arquitectura de Computadoras',
+            'COMP': 'Compiladores',
+            'COMPIL': 'Compiladores',
+            'GRAF': 'Graficación',
+            'GRAFICOS': 'Graficación',
+            'BDD': 'Bases de Datos Distribuidas',
+            'BDIST': 'Bases de Datos Distribuidas',
+            'TGS': 'Teoría General de Sistemas',
+            'TEOGS': 'Teoría General de Sistemas',
+            'LENG': 'Lenguajes de Programación',
+            'LENPROG': 'Lenguajes de Programación',
+            'PARA': 'Programación Paralela',
+            'PARALELA': 'Programación Paralela',
+            'EMB': 'Sistemas Embebidos',
+            'EMBEBIDOS': 'Sistemas Embebidos',
+            'ROB': 'Robótica',
+            'ROBOTICA': 'Robótica',
+            'CIENCDAT': 'Ciencia de Datos',
+            'CD': 'Ciencia de Datos',
+            'BIGDATA': 'Big Data',
+            'BDATA': 'Big Data',
+            'CLOUD': 'Computación en la Nube',
+            'NUBE': 'Computación en la Nube',
+            'IOT': 'Internet de las Cosas',
+            'IDC': 'Internet de las Cosas',
+            'BLOCK': 'Blockchain',
+            'CADENA': 'Blockchain',
+            'CRIPTO': 'Criptografía',
+            'CRIP': 'Criptografía',
+            'SIM': 'Simulación',
+            'SIMUL': 'Simulación',
+            'HPC': 'Computación de Alto Rendimiento',
+            'ALTO': 'Computación de Alto Rendimiento',
+            'VISION': 'Visión por Computadora',
+            'VISCOMP': 'Visión por Computadora',
+            'NLP': 'Procesamiento de Lenguaje Natural',
+            'PLN': 'Procesamiento de Lenguaje Natural',
+            'UX': 'Experiencia de Usuario',
+            'UI': 'Interfaz de Usuario',
+            'TEST': 'Pruebas de Software',
+            'PRUEBAS': 'Pruebas de Software',
+            'CAL1': 'Cálculo I',
+            'CAL2': 'Cálculo II',
+            'CAL3': 'Cálculo III',
+            'FIS1': 'Física I',
+            'FIS2': 'Física II',
+            'FIS3': 'Física III',
+            'LIN': 'Álgebra Lineal',
+            'LINEAL': 'Álgebra Lineal',
+            'DISCR': 'Matemática Discreta',
+            'MDIS': 'Matemática Discreta',
+            'ESTAD': 'Estadística',
+            'EST': 'Estadística',
+            'PROBA': 'Probabilidad',
+            'PROB': 'Probabilidad',
+            'ECON': 'Economía',
+            'ECO': 'Economía',
+            'ADM': 'Administración',
+            'ADMIN': 'Administración',
+            'CONT': 'Contabilidad',
+            'CONTA': 'Contabilidad',
+            'MARK': 'Marketing',
+            'MKT': 'Marketing',
+            'DER': 'Derecho',
+            'DERECHO': 'Derecho',
+            'FILO': 'Filosofía',
+            'FILOS': 'Filosofía',
+            'PSIC': 'Psicología',
+            'PSICO': 'Psicología',
+            'SOC': 'Sociología',
+            'SOCIO': 'Sociología',
+            'HIST': 'Historia',
+            'HISTORIA': 'Historia',
+            'LIT': 'Literatura',
+            'LITER': 'Literatura',
+            'IDIOM': 'Idiomas',
+            'INGL': 'Inglés',
+            'INGLES': 'Inglés'
+        }
         
         # Crear widgets
         self.create_widgets()
@@ -40,18 +156,18 @@ class FileOrganizerApp(TkinterDnD.Tk):
     def create_widgets(self):
         style = ttk.Style()
         style.theme_use("vista")
-        style.configure("TFrame", background="#f0f0f0")
-        style.configure("TLabel", background="#f0f0f0", font=("Segoe UI", 9))
+        style.configure("TFrame", background="#ffffff")
+        style.configure("TLabel", background="#ffffff", font=("Segoe UI", 9))
         style.configure("TButton", font=("Segoe UI", 9))
         style.configure("Title.TLabel", font=("Segoe UI", 14, "bold"))
         style.configure("Section.TLabelframe.Label", font=("Segoe UI", 10, "bold"))
-        style.configure("Accent.TButton", background="#4CAF50", foreground="white")
-        style.map("Accent.TButton", background=[("active", "#45a049")])
+        style.configure("Accent.TButton", background="#0E0F0E", foreground="white")
+        style.map("Accent.TButton", background=[("active", "#000000")])
         
         main_frame = ttk.Frame(self)
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
         
-        ttk.Label(main_frame, text="Organizador de Archivos", style="Title.TLabel").pack(pady=(0, 15))
+        ttk.Label(main_frame, text="Organizador de Archivos Universitarios", style="Title.TLabel").pack(pady=(0, 15))
         
         # Sección de ubicación de destino
         location_frame = ttk.LabelFrame(main_frame, text="Ubicación de Destino")
@@ -68,12 +184,27 @@ class FileOrganizerApp(TkinterDnD.Tk):
             command=self.browse_folder
         ).grid(row=0, column=2, padx=5, pady=5)
         
-        # Modo de prueba
+        # Opciones de organización
+        options_frame = ttk.LabelFrame(main_frame, text="Opciones de Organización")
+        options_frame.pack(fill="x", pady=10)
+        
         ttk.Checkbutton(
-            location_frame,
+            options_frame,
+            text="Organizar por curso universitario",
+            variable=self.organize_by_course
+        ).grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        
+        ttk.Checkbutton(
+            options_frame,
+            text="Organizar por tipo de archivo dentro de cada curso",
+            variable=self.organize_by_type
+        ).grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        
+        ttk.Checkbutton(
+            options_frame,
             text="Modo prueba (no mueve archivos)",
             variable=self.dry_run
-        ).grid(row=1, column=0, columnspan=3, padx=5, pady=5, sticky="w")
+        ).grid(row=0, column=1, padx=5, pady=5, sticky="w")
         
         # Área de arrastre
         drop_frame = ttk.LabelFrame(main_frame, text="Arrastra archivos aquí")
@@ -211,55 +342,94 @@ class FileOrganizerApp(TkinterDnD.Tk):
         # Iniciar hilo
         threading.Thread(target=self.organize_files, daemon=True).start()
     
-    def organize_files(self):
-        """Proceso principal de organización"""
-        target_path = Path(self.target_path.get())
-        organized_folder = target_path / "Archivos Ordenados"
+    def detect_course_from_filename(self, filename):
+        """Detecta el curso universitario basado en el nombre del archivo"""
+        # Convertir a mayúsculas y eliminar espacios
+        filename_upper = filename.upper().replace(" ", "")
         
-        # Crear carpeta principal si no existe
-        if not organized_folder.exists():
-            organized_folder.mkdir(parents=True, exist_ok=True)
+        # Buscar coincidencias exactas primero
+        for abbr, full_name in self.course_abbreviations.items():
+            # Patrón para buscar la abreviatura como palabra completa
+            pattern = r'(^|_|\W)' + re.escape(abbr) + r'($|_|\W)'
+            if re.search(pattern, filename_upper):
+                return full_name
         
+        # Si no encuentra coincidencia exacta, buscar parciales
+        for abbr, full_name in self.course_abbreviations.items():
+            if abbr in filename_upper:
+                return full_name
+        
+        # Si no encuentra nada, devolver "Otros Cursos"
+        return "Otros Cursos"
+    
+    def get_file_category(self, mime_type):
+        """Determina la categoría del archivo basado en su tipo MIME"""
         # Categorías basadas en tipo MIME
         categories = {
+            # Documentos
             'application/pdf': 'Documentos',
             'application/msword': 'Documentos',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Documentos',
+            'application/vnd.oasis.opendocument.text': 'Documentos',
             'text/plain': 'Documentos',
             'application/rtf': 'Documentos',
+            'application/x-tex': 'Documentos',
+            
+            # Hojas de Cálculo
             'application/vnd.ms-excel': 'Hojas de Calculo',
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Hojas de Calculo',
+            'application/vnd.oasis.opendocument.spreadsheet': 'Hojas de Calculo',
             'text/csv': 'Hojas de Calculo',
+            
+            # Presentaciones
             'application/vnd.ms-powerpoint': 'Presentaciones',
             'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'Presentaciones',
+            'application/vnd.oasis.opendocument.presentation': 'Presentaciones',
+            
+            # Imágenes
             'image/jpeg': 'Imagenes',
             'image/png': 'Imagenes',
             'image/gif': 'Imagenes',
             'image/bmp': 'Imagenes',
             'image/svg+xml': 'Imagenes',
+            
+            # Videos
             'video/mp4': 'Videos',
             'video/quicktime': 'Videos',
             'video/x-msvideo': 'Videos',
             'video/x-matroska': 'Videos',
-            'video/x-ms-wmv': 'Videos',
+            
+            # Audio
             'audio/mpeg': 'Audio',
             'audio/wav': 'Audio',
             'audio/flac': 'Audio',
-            'audio/aac': 'Audio',
+            
+            # Archivos Comprimidos
             'application/zip': 'Archivos Comprimidos',
             'application/x-rar-compressed': 'Archivos Comprimidos',
             'application/x-7z-compressed': 'Archivos Comprimidos',
-            'application/x-tar': 'Archivos Comprimidos',
-            'application/gzip': 'Archivos Comprimidos',
-            'application/vnd.microsoft.portable-executable': 'Ejecutables',
-            'application/x-msdownload': 'Ejecutables',
+            
+            # Código
             'text/x-python': 'Codigo',
             'application/javascript': 'Codigo',
             'text/html': 'Codigo',
             'text/css': 'Codigo',
             'application/json': 'Codigo',
-            'application/xml': 'Codigo'
+            
+            # Por defecto
+            'application/octet-stream': 'Otros'
         }
+        
+        return categories.get(mime_type, 'Otros')
+    
+    def organize_files(self):
+        """Proceso principal de organización"""
+        target_path = Path(self.target_path.get())
+        organized_folder = target_path / "Archivos Universitarios Ordenados"
+        
+        # Crear carpeta principal si no existe
+        if not organized_folder.exists():
+            organized_folder.mkdir(parents=True, exist_ok=True)
         
         # Contadores
         total_files = len(self.dragged_files)
@@ -281,12 +451,33 @@ class FileOrganizerApp(TkinterDnD.Tk):
             if mime_type is None:
                 mime_type = 'application/octet-stream'  # Tipo por defecto
             
-            folder_name = categories.get(mime_type, 'Otros')
+            # Determinar curso universitario
+            course_name = "Otros Cursos"
+            if self.organize_by_course.get():
+                course_name = self.detect_course_from_filename(src.stem)
             
-            # Carpeta destino
-            dest_folder = organized_folder / folder_name
+            # Determinar categoría de archivo
+            file_category = "Otros"
+            if self.organize_by_type.get():
+                file_category = self.get_file_category(mime_type)
+            
+            # Estructura de carpetas dependiendo de las opciones seleccionadas
+            if self.organize_by_course.get() and self.organize_by_type.get():
+                # Carpeta Curso > Tipo de Archivo
+                dest_folder = organized_folder / course_name / file_category
+            elif self.organize_by_course.get():
+                # Solo Carpeta Curso
+                dest_folder = organized_folder / course_name
+            elif self.organize_by_type.get():
+                # Solo Carpeta Tipo de Archivo
+                dest_folder = organized_folder / file_category
+            else:
+                # Sin organización, solo en la carpeta principal
+                dest_folder = organized_folder
+            
+            # Crear carpeta destino si no existe
             if not dest_folder.exists():
-                dest_folder.mkdir(exist_ok=True)
+                dest_folder.mkdir(parents=True, exist_ok=True)
             
             # Nombre destino
             dest = dest_folder / src.name
