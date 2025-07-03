@@ -366,59 +366,124 @@ class FileOrganizerApp(TkinterDnD.Tk):
         """Determina la categoría del archivo basado en su tipo MIME"""
         # Categorías basadas en tipo MIME
         categories = {
-            # Documentos
-            'application/pdf': 'Documentos',
-            'application/msword': 'Documentos',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Documentos',
-            'application/vnd.oasis.opendocument.text': 'Documentos',
-            'text/plain': 'Documentos',
-            'application/rtf': 'Documentos',
-            'application/x-tex': 'Documentos',
-            
-            # Hojas de Cálculo
-            'application/vnd.ms-excel': 'Hojas de Calculo',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Hojas de Calculo',
-            'application/vnd.oasis.opendocument.spreadsheet': 'Hojas de Calculo',
-            'text/csv': 'Hojas de Calculo',
-            
-            # Presentaciones
-            'application/vnd.ms-powerpoint': 'Presentaciones',
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'Presentaciones',
-            'application/vnd.oasis.opendocument.presentation': 'Presentaciones',
-            
-            # Imágenes
-            'image/jpeg': 'Imagenes',
-            'image/png': 'Imagenes',
-            'image/gif': 'Imagenes',
-            'image/bmp': 'Imagenes',
-            'image/svg+xml': 'Imagenes',
-            
-            # Videos
-            'video/mp4': 'Videos',
-            'video/quicktime': 'Videos',
-            'video/x-msvideo': 'Videos',
-            'video/x-matroska': 'Videos',
-            
-            # Audio
-            'audio/mpeg': 'Audio',
-            'audio/wav': 'Audio',
-            'audio/flac': 'Audio',
-            
-            # Archivos Comprimidos
-            'application/zip': 'Archivos Comprimidos',
-            'application/x-rar-compressed': 'Archivos Comprimidos',
-            'application/x-7z-compressed': 'Archivos Comprimidos',
-            
-            # Código
-            'text/x-python': 'Codigo',
-            'application/javascript': 'Codigo',
-            'text/html': 'Codigo',
-            'text/css': 'Codigo',
-            'application/json': 'Codigo',
-            
-            # Por defecto
-            'application/octet-stream': 'Otros'
-        }
+        # Documentos
+        'application/pdf': 'Documentos',
+        'application/msword': 'Documentos',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Documentos',
+        'application/vnd.oasis.opendocument.text': 'Documentos',
+        'text/plain': 'Documentos',
+        'application/rtf': 'Documentos',
+        'application/x-tex': 'Documentos',
+        'application/vnd.apple.pages': 'Documentos',
+        'application/vnd.google-apps.document': 'Documentos',
+        'text/markdown': 'Documentos',
+        
+        # Hojas de Cálculo
+        'application/vnd.ms-excel': 'Hojas de Calculo',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Hojas de Calculo',
+        'application/vnd.oasis.opendocument.spreadsheet': 'Hojas de Calculo',
+        'text/csv': 'Hojas de Calculo',
+        'application/vnd.google-apps.spreadsheet': 'Hojas de Calculo',
+        'application/vnd.ms-excel.sheet.macroEnabled.12': 'Hojas de Calculo',
+        
+        # Presentaciones
+        'application/vnd.ms-powerpoint': 'Presentaciones',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'Presentaciones',
+        'application/vnd.oasis.opendocument.presentation': 'Presentaciones',
+        'application/vnd.google-apps.presentation': 'Presentaciones',
+        
+        # Imágenes
+        'image/jpeg': 'Imagenes',
+        'image/png': 'Imagenes',
+        'image/gif': 'Imagenes',
+        'image/bmp': 'Imagenes',
+        'image/svg+xml': 'Imagenes',
+        'image/tiff': 'Imagenes',
+        'image/webp': 'Imagenes',
+        'image/vnd.adobe.photoshop': 'Imagenes',
+        'image/x-eps': 'Imagenes',
+        
+        # Videos
+        'video/mp4': 'Videos',
+        'video/quicktime': 'Videos',
+        'video/x-msvideo': 'Videos',
+        'video/x-matroska': 'Videos',
+        'video/webm': 'Videos',
+        'video/x-flv': 'Videos',
+        'video/3gpp': 'Videos',
+        
+        # Audio
+        'audio/mpeg': 'Audio',
+        'audio/wav': 'Audio',
+        'audio/flac': 'Audio',
+        'audio/ogg': 'Audio',
+        'audio/aac': 'Audio',
+        'audio/x-m4a': 'Audio',
+        'audio/x-ms-wma': 'Audio',
+        
+        # Archivos Comprimidos
+        'application/zip': 'Archivos Comprimidos',
+        'application/x-rar-compressed': 'Archivos Comprimidos',
+        'application/x-7z-compressed': 'Archivos Comprimidos',
+        'application/x-tar': 'Archivos Comprimidos',
+        'application/gzip': 'Archivos Comprimidos',
+        'application/x-bzip2': 'Archivos Comprimidos',
+        
+        # Código
+        'text/x-python': 'Codigo',
+        'application/javascript': 'Codigo',
+        'text/html': 'Codigo',
+        'text/css': 'Codigo',
+        'application/json': 'Codigo',
+        'text/x-java': 'Codigo',
+        'text/x-c': 'Codigo',
+        'text/x-c++': 'Codigo',
+        'text/x-shellscript': 'Codigo',
+        'application/xml': 'Codigo',
+        'application/x-httpd-php': 'Codigo',
+        
+        # Ebooks
+        'application/epub+zip': 'Ebooks',
+        'application/x-mobipocket-ebook': 'Ebooks',
+        'application/vnd.amazon.ebook': 'Ebooks',
+        
+        # Fuentes
+        'font/ttf': 'Fuentes',
+        'font/otf': 'Fuentes',
+        'application/font-woff': 'Fuentes',
+        'application/font-woff2': 'Fuentes',
+        'application/vnd.ms-fontobject': 'Fuentes',
+        
+        # Binarios/Instaladores
+        'application/x-msdownload': 'Binarios',
+        'application/x-sh': 'Binarios',
+        'application/x-executable': 'Binarios',
+        'application/vnd.android.package-archive': 'Binarios',
+        'application/x-msi': 'Binarios',
+        
+        # CAD y Modelado 3D
+        'application/sldworks': 'CAD',
+        'application/vnd.dwg': 'CAD',
+        'model/stl': 'CAD',
+        'model/obj': 'CAD',
+        
+        # Bases de Datos - ACTUALIZADO
+        'application/x-sqlite3': 'Bases de Datos',
+        'application/vnd.ms-access': 'Bases de Datos',
+        'application/x-dbf': 'Bases de Datos',
+        'application/sql': 'Bases de Datos',          # Archivos .sql
+        'application/x-sql': 'Bases de Datos',        # Alternativa para .sql
+        'application/backup': 'Bases de Datos',       # Archivos .bak
+        'application/x-backup': 'Bases de Datos',     # Alternativa para .bak
+        'application/octet-stream': 'Bases de Datos', # Cuando .bak se detecta como binario
+        
+        # Virtualización
+        'application/x-virtualbox-vdi': 'Virtualizacion',
+        'application/x-vmdk-disk': 'Virtualizacion',
+        
+        # Por defecto (se movió a la última posición)
+        'application/octet-stream': 'Otros'
+    }
         
         return categories.get(mime_type, 'Otros')
     
